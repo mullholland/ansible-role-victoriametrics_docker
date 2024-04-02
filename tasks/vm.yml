@@ -1,0 +1,53 @@
+---
+- name: vm | set application facts
+  ansible.builtin.set_fact:
+    app_name: "victoriametrics"
+    app_image: "{{ vm_docker_version }}"
+    app_network: "{{ vm_docker_network_name }}"
+    app_base_path: "{{ vm_docker_base_path }}"
+    app_user: "{{ vm_docker_user }}"
+    app_uid: "{{ vm_docker_uid }}"
+    app_group: "{{ vm_docker_group }}"
+    app_gid: "{{ vm_docker_gid }}"
+    app_timezone: "{{ vm_docker_timezone }}"
+    app_environment_variables: "{{ vm_docker_environment_variables }}"
+    app_commands: "{{ vm_docker_commands }}"
+    app_volumes: "{{ vm_docker_volumes }}"
+    app_labels: "{{ vm_docker_labels }}"
+    app_ports: "{{ vm_docker_ports }}"
+
+- name: "vm | Ensure app folders exists"
+  ansible.builtin.file:
+    name: '{{ app_base_path }}/{{ app_name }}/{{ item }}'
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+    mode: "0770"
+    state: directory
+  with_items:
+    - "data"
+
+- name: vm | get docker executable path
+  ansible.builtin.command:
+    cmd: "which docker"
+  changed_when: false
+  register: vm_docker_executable_path
+
+- name: "vm | create docker-compose.yml"
+  ansible.builtin.template:
+    src: "docker-compose.yml.j2"
+    dest: "{{ app_base_path }}/{{ app_name }}/docker-compose.yml"
+    mode: "0640"
+    owner: "{{ app_user }}"
+    group: "{{ app_group }}"
+  notify: vm_restart
+
+- name: "vm | Create systemd service"
+  ansible.builtin.template:
+    src: "systemd.service.j2"
+    dest: "/etc/systemd/system/{{ app_name }}.service"
+    mode: "0770"
+    owner: "root"
+    group: "root"
+  notify:
+    - vm_systemd_reload
+    - vm_restart

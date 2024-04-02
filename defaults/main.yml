@@ -1,0 +1,48 @@
+---
+# General config
+vm_docker_network_name: "web"
+vm_docker_base_path: "/opt"
+vm_docker_timezone: "Europe/Berlin"
+
+# User/Group of the stack. Everything is mapped to this, instead of root.
+vm_docker_user: "homelab"
+vm_docker_uid: "900"
+vm_docker_group: "homelab"
+vm_docker_gid: "900"
+vm_docker_user_system: true
+
+# which container version to install
+# https://hub.docker.com/r/grafana/grafana/tags
+# can also be latest
+vm_docker_version: "victoriametrics/victoria-metrics:latest"
+
+vm_docker_commands:
+  - "--storageDataPath=/storage"
+  # - "--graphiteListenAddr=:2003"
+  # - "--opentsdbListenAddr=:4242"
+  - "--httpListenAddr=:8428"
+  # - "--influxListenAddr=:8089"
+  - "--vmalert.proxyURL=http://vmalert:8880"
+
+vm_docker_environment_variables: []
+vm_docker_volumes:
+  - "{{ vm_docker_base_path }}/victoriametrics/data:/storage"
+
+# which port to expose. can be empty
+vm_docker_ports:
+  - "8428:8428"
+  # - "8089:8089"
+  # - "8089:8089/udp"
+  # - "2003:2003"
+  # - "2003:2003/udp"
+  # - "4242:4242"
+
+vm_docker_labels:
+  - "traefik.enable=false"
+# - "traefik.enable=true"
+# - "traefik.http.routers.grafana.entryPoints=https"
+# - "traefik.http.routers.grafana.rule=Host(`grafana.example.com`)"
+# - "traefik.http.routers.grafana.tls.certResolver=letsEncrypt"
+# - "traefik.http.routers.grafana.tls=true"
+#  - "traefik.http.routers.grafana.service=grafana"
+#  - "traefik.http.routers.grafana.loadbalancer.server.port=80"
